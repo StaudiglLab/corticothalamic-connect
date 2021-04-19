@@ -6,7 +6,7 @@ clc
 
 % define data directory
 dir_data = 'C:/Users/ra34fod/Documents/meg-ieeg_data_v2/';
-dir_repo = 'C:/Users/ra34fod/github/thalamic_detection/';
+dir_repo = 'C:/Users/ra34fod/github/corticothalamic-connect/';
 cd(dir_repo);
 
 % add toolboxes
