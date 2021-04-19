@@ -1,20 +1,17 @@
-function run_connectivity_estimation(directory,subj,metric)
+function run_connectivity_estimation(directory,subj)
       
-% if no metric supplied, use PLV
-if nargin == 2; metric = 'PLV'; end
-
 % define savefile name
-fileout = sprintf('%ssub-%02.0f_pliconnect-sourceMD_%s.mat',directory,subj,metric);
+fileout = sprintf('%ssub-%02.0f_pliconnect-sourceMD_PLV.mat',directory,subj);
 
 % get phase data for source and MD data
-data = internal_prepareData(directory,subj,'source','MD',metric);
+data = internal_prepareData(directory,subj,'source','MD');
 
 % run source-MD connectivity
-internal_connect(data,fileout,metric)
+internal_connect(data,fileout)
 
 end 
     
-function data_out = internal_prepareData(directory,subj,roiA,roiB,metric)
+function data_out = internal_prepareData(directory,subj,roiA,roiB)
     
 % update user
 fprintf('\npreparing sub-%02.0f data for %s-%s connectivity...\n',subj,roiA,roiB)
@@ -45,17 +42,11 @@ if issource
     chans = cat(1,source.label(atlas.inside(sourcemodel.inside)),{roiB});
     
     % get phase
-    switch metric
-        case 'imagCoh'; [phase,trialinfo,label,freqs,times,fspc] = get_tfr(source,chans);
-        otherwise; [phase,trialinfo,label,freqs,times] = get_tfr(source,chans); 
-    end
+    [phase,trialinfo,label,freqs,times] = get_tfr(source,chans); 
     
 else
     chans = {'MD','ANT'};
-    switch metric
-        case 'imagCoh'; [phase,trialinfo,label,freqs,times,fspc] = get_tfr(source,chans);
-        otherwise; [phase,trialinfo,label,freqs,times] = get_tfr(source,chans); 
-    end 
+    [phase,trialinfo,label,freqs,times,fspc] = get_tfr(source,chans);
     
 end
 
@@ -69,14 +60,10 @@ if exist('fspc','var'); data_out.fourierspctrm = fspc; end
 
 end
 
-function internal_connect(data,save_name,metric)
+function internal_connect(data,save_name)
  
 % compute connectivity for every trial and channel
-switch metric
-    case 'PLV'; [connect_all,connect_beh,connect_lag] = getPhaseLockingValue(data.phase,data.trialinfo);
-    case 'TimeResolvedPLV'; [connect_all,connect_hits,connect_misses] = getTimeResolvedPLV(data.phase,data.trialinfo,data.times);
-    case 'imagCoh'; [connect_all,connect_beh] = getImagCoherence(data);
-end
+[connect_all,connect_beh,connect_lag] = getPhaseLockingValue(data.phase,data.trialinfo);
 
 % store data
 data = struct('freq',data.freqs,'time',data.times,'label',{data.label(1:end-1)},'cfg',[],...
@@ -88,11 +75,6 @@ if exist('connect_beh','var');      data.beh = connect_beh; end
 if exist('connect_hits','var');     data.hits = connect_hits; end
 if exist('connect_misses','var');   data.misses = connect_misses; end
 
-% fix time for time-resolved PLV
-if size(connect_all,3) == 2
-    data.time = [-0.4 0.4];
-end
-          
 % save data
 fprintf('\nsaving data...\n')
 save(save_name,'data')

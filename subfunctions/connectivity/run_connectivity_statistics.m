@@ -1,4 +1,4 @@
-function run_connectivity_statistics(directory,npp,roi_str,metric)
+function run_connectivity_statistics(directory,npp,roi_str)
    
 %% Prepare Data
 % predefine cell for group data
@@ -9,7 +9,7 @@ for pp = 1 : npp
     
     % load data
     pp_directory = sprintf('%s/derivatives/sub-%02.0f/ephys/',directory,pp);
-    filename = sprintf('sub-%02.0f_pliconnect-%s_%s.mat',pp,roi_str,metric);
+    filename = sprintf('sub-%02.0f_pliconnect-%s_PLV.mat',pp,roi_str);
     load([pp_directory,filename],'data')
 
     % add data to group
@@ -20,20 +20,8 @@ end
 % get grand average of participants
 cfg = [];
 cfg.keepindividual = 'yes';
-switch metric
-    case 'TimeResolvedPLV'; cfg.parameter = {'all','hits','misses'};
-    otherwise; cfg.parameter = {'all','beh'}; 
-end
+cfg.parameter = {'all','beh'}; 
 grand_freq = ft_freqgrandaverage(cfg,group_data{:});
-% 
-% % smooth response
-% cfg             = [];
-% cfg.fwhm_t      = 0.1;
-% cfg.fwhm_f      = 1;
-% cfg.parameter   = 'all';
-% grand_freq      = smooth_TF_GA(cfg,grand_freq);
-% cfg.parameter   = 'beh';
-% grand_freq      = smooth_TF_GA(cfg,grand_freq);
 
 %% convert to source data
 % get sourcemodel
