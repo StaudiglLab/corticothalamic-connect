@@ -37,7 +37,7 @@ for patient = 1 : 6
     tml = ft_timelockbaseline(struct('baseline',[-0.25 0]),tml);
     
     % plot MD
-    ms = [-1 -1 1 1 1 1];
+    ms = [-1 -1 1 1 1 1]; % flip polarity differences introduced by referencing
     figure; 
     plot(tml.time,tml.avg(ismember(tml.label,'MD'),:).*ms(patient),'b-','linewidth',1);
     xlim([-0.25 1]); xline(0,'k--');
@@ -45,7 +45,7 @@ for patient = 1 : 6
     set(gca,'box','off','tickdir','out','fontsize',16)
     
     % plot ANT
-    as = [1 1 1 1 -1];
+    as = [1 1 1 1 -1]; % flip polarity differences introduced by referencing
     if patient < 6
         figure; 
         plot(tml.time,tml.avg(ismember(tml.label,'ANT'),:).*as(patient),'r-','linewidth',1);
