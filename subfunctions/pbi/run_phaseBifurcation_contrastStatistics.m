@@ -55,8 +55,8 @@ load(sprintf('%s/derivatives/group/stat_pbi-MD.mat',directory),'stat');
 
 % define general stat config structure
 cfg                     = [];
-cfg.method              = 'analytic';%'montecarlo';
-cfg.correctm            = 'none';
+cfg.method              = 'montecarlo';
+cfg.correctm            = 'cluster';
 cfg.numrandomization    = 'all';
 cfg.ivar                = 2;
 cfg.uvar                = 1;
@@ -64,8 +64,8 @@ cfg.parameter           = 'pbi';
 cfg.design              = design;
 cfg.statistic           = 'ft_statfun_depsamplesT';  
 cfg.tail                = 1;
-cfg.avgoverfreq         = 'yes';
-cfg.avgovertime         = 'yes';
+% cfg.avgoverfreq         = 'yes';
+% cfg.avgovertime         = 'yes';
 cfg.latency             = [min(stat.time(any(any(stat.posclusterslabelmat==1,2),1))) max(stat.time(any(any(stat.posclusterslabelmat==1,2),1)))];
 cfg.frequency           = [min(stat.freq(any(any(stat.posclusterslabelmat==1,3),1))) max(stat.freq(any(any(stat.posclusterslabelmat==1,3),1)))];
 stat                    = ft_freqstatistics(cfg,freq,null_hyp);
