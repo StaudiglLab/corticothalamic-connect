@@ -160,6 +160,6 @@ cfg.tail                = 1;
 stat_mask               = ft_sourcestatistics(cfg,freq,null_hyp);
 
 %% Save Results
-save(sprintf('%s/derivatives/group/stat_pli-all_sourceMD.mat',directory),'grand_freq','stat','stat_beh','stat_mask'); %#ok<*LOAD>
+save(sprintf('%s/derivatives/group/stat_pli-all_%s.mat',directory,roi_st),'grand_freq','stat','stat_beh','stat_mask'); %#ok<*LOAD>
 
 end

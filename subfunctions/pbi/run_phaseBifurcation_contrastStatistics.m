@@ -64,10 +64,6 @@ cfg.parameter           = 'pbi';
 cfg.design              = design;
 cfg.statistic           = 'ft_statfun_depsamplesT';  
 cfg.tail                = 1;
-% cfg.avgoverfreq         = 'yes';
-% cfg.avgovertime         = 'yes';
-cfg.latency             = [min(stat.time(any(any(stat.posclusterslabelmat==1,2),1))) max(stat.time(any(any(stat.posclusterslabelmat==1,2),1)))];
-cfg.frequency           = [min(stat.freq(any(any(stat.posclusterslabelmat==1,3),1))) max(stat.freq(any(any(stat.posclusterslabelmat==1,3),1)))];
 stat                    = ft_freqstatistics(cfg,freq,null_hyp);
 
 % get bayes at peak
