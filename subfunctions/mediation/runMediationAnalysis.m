@@ -5,23 +5,24 @@ if numel(unique(y)) == 2; useLogit = true;
 else; useLogit = false;
 end
 
-% cycle through betas
-for beta = 1 : 2
-    
-    % run IV -> MV GLM (always use linear here)
-    a = int_runModel(X(:,beta),X(:,~ismember([1 2],beta)),false);
-    
-    % run full model
-    tmp = int_runModel(X(:,[beta find(~ismember([1 2],beta))]),y,useLogit);
-    b = tmp(2);
-    
-    % package result
-    stat{beta}.a = a;
-    stat{beta}.b = b;
-    stat{beta}.cdash = tmp(1);
-    stat{beta}.ab = (stat{beta}.a.*stat{beta}.b) ./ sqrt(stat{beta}.a.^2 + stat{beta}.b.^2 + 1);
-    stat{beta}.d = tmp(2) - tmp(1); % difference: indirect path > direct path
-end
+% run IV -> MV GLM (always use linear here)
+a = int_runModel(X(:,1),X(:,2),false);
+
+% run IV -> DV logisitic
+c = int_runModel(X(:,1),y,true);
+
+% run full model
+tmp = int_runModel(X,y,true);
+b = tmp(2);
+cdash = tmp(1);
+
+% package result
+stat.a = a;
+stat.b = b;
+stat.c = c;
+stat.cdash = cdash;
+stat.ab = (stat.a.*stat.b) ./ sqrt(stat.a.^2 + stat.b.^2 + 1);
+stat.d = stat.c - stat.cdash;
  
 end
 

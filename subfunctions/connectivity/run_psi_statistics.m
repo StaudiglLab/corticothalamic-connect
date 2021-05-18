@@ -26,7 +26,7 @@ grand_all = ft_freqgrandaverage(cfg,group_data{:,3});
 
 %% convert to source data
 % get sourcemodel
-[atlas,sourcemodel] = get_sourcemodel();
+[atlas,sourcemodel,partial] = get_sourcemodel();
 
 % create source structure
 source = struct('dim',sourcemodel.dim,'inside',atlas.inside(:),'pos',sourcemodel.pos.*10,...
@@ -37,6 +37,11 @@ source = struct('dim',sourcemodel.dim,'inside',atlas.inside(:),'pos',sourcemodel
 % add in measure
 source.all(:,source.inside) = mean(mean(grand_all.psi_z(:,:,grand_all.freq>=6&grand_all.freq<=14),4),3);
 source.diff(:,source.inside) = mean(mean(grand_hits.psi_z(:,:,grand_all.freq>=6&grand_all.freq<=14),4),3) - mean(mean(grand_misses.psi_z(:,:,grand_all.freq>=6&grand_all.freq<=14),4),3);
+
+% load in partial mask
+source.inside = partial.inside(:);
+source.all(:,source.inside~=1) = NaN;
+source.diff(:,source.inside~=1) = NaN;
 
 % rename source to fit code
 freq = source;
@@ -65,7 +70,6 @@ cfg.ivar                = 2;
 cfg.uvar                = 1;
 cfg.design              = design;
 cfg.statistic           = 'ft_statfun_depsamplesT';  
-cfg.tail                = 1;
 cfg.parameter           = 'all';
 stat{1}                 = ft_sourcestatistics(cfg,freq,null_hyp);
 cfg.parameter           = 'diff';
@@ -76,7 +80,7 @@ cond_str = {'all','h>m'};
 for i = 1 : 2
     addpath('C:\Users\ra34fod\github\bayesFactor\')
     pidx = find(max(stat{i}.stat(:))==stat{i}.stat(:));
-    stat{i}.bayes = bf.ttest(squeeze(freq.all(:,pidx)));
+    stat{i}.bayes = bf.ttest(squeeze(freq.diff(:,pidx)));
 
     % get effect size at peak
     stat{i}.dz = abs(stat{i}.stat ./ sqrt(size(freq.all,1)));

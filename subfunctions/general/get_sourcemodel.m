@@ -1,20 +1,26 @@
-function [atlas,sourcemodel] = get_sourcemodel(roi)
+function [atlas,sourcemodel,partial] = get_sourcemodel(roi)
     
 % load brodmann atlas and source template
 atlas = ft_read_mri('whole_brain_mask.nii');
+partial = ft_read_mri('partial_brain_mask.nii');
 load('C:\Users\ra34fod\github\fieldtrip\template\sourcemodel\standard_sourcemodel3d10mm.mat','sourcemodel');
 
 % interpolate atlas with sourcemodel
 cfg                 = [];
 cfg.parameter       = 'anatomy';
 atlas               = ft_sourceinterpolate(cfg,atlas,sourcemodel);
+partial             = ft_sourceinterpolate(cfg,partial,sourcemodel);
 
 % find values for any BA region
 atlas.anatomy = atlas.anatomy > 0;
 atlas.inside  = atlas.anatomy == 1;
 
+% find values for anterior regions
+partial.anatomy = partial.anatomy > 0;
+partial.inside  = partial.anatomy == 1;
+
 % get roi if requested
-if nargin == 1;
+if nargin == 1
     
     % load AAL
     aal = ft_read_mri('C:\Users\ra34fod\github\fieldtrip\template\atlas\aal\ROI_MNI_V4.nii');

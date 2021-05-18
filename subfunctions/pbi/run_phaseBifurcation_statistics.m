@@ -51,7 +51,7 @@ freq                = ft_freqgrandaverage(cfg,group_data{:});
 if strcmpi(roi_str,'source')
     
     % get sourcemodel
-    [atlas,sourcemodel] = get_sourcemodel();
+    [atlas,sourcemodel,partial] = get_sourcemodel();
     
     % create source structure
     source = struct('dim',sourcemodel.dim,'inside',atlas.inside(:),'pos',sourcemodel.pos.*10,...
@@ -62,8 +62,12 @@ if strcmpi(roi_str,'source')
     if strcmpi(participantType,'patient')
         source.pbi(:,source.inside) = mean(mean(freq.pbi(:,:,freq.freq<=14,freq.time<0),4),3);
     elseif strcmpi(participantType,'control') % restrict to patient cluster
-        source.pbi(:,source.inside) = mean(mean(freq.pbi(:,:,freq.freq>=11&freq.freq<=13,freq.time<0),4),3);
+        source.pbi(:,source.inside) = mean(mean(freq.pbi(:,:,freq.freq>=10&freq.freq<=12,freq.time<0),4),3);
     end
+    
+    % load in partial mask
+    source.inside = partial.inside;
+    source.pbi(:,source.inside~=1) = NaN;
     
     % rename source to fit code
     freq = source;
@@ -91,7 +95,6 @@ cfg.uvar                = 1;
 cfg.parameter           = 'pbi';
 cfg.design              = design;
 cfg.statistic           = 'ft_statfun_depsamplesT';  
-cfg.tail                = 1;
 
 % if is source
 if strcmpi(roi_str,'source')
