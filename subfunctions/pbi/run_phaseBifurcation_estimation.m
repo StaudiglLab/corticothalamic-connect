@@ -17,11 +17,6 @@ else
     label = ephys.label;
 end
 
-% if healthy, add filter to match patients
-if strncmpi(filename,'hlth',4)
-    ephys = ft_preprocessing(struct('hpfilter','yes','hpfreq',5),ephys);
-end
-
 % get phase using variable width wavelets
 [phase,trialinfo,label,freqs,times] = get_tfr(ephys,label);
 

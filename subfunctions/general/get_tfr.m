@@ -1,7 +1,8 @@
-function [phase,trialinfo,label,freqs,times,power] = get_tfr(ephys,channels)
+function [phase,trialinfo,label,freqs,times,power] = get_tfr(ephys,channels,foi)
     
 % if channels is not specified
 if ~exist('channels','var'); channels = ephys.label; end
+if ~exist('foi','var'); foi = 5:20; end
 
 % record trialinfo
 trialinfo = ephys.trialinfo(:,3);
@@ -12,7 +13,7 @@ cfg.output  = 'fourier';
 cfg.method  = 'wavelet';
 cfg.width   = 6;
 cfg.toi     = -0.8:0.05:0.8;
-cfg.foi     = 5:20;
+cfg.foi     = foi;
 cfg.pad     = 'nextpow2';
 cfg.channel = channels;
 freq        = ft_freqanalysis(cfg,ephys); clear ephys

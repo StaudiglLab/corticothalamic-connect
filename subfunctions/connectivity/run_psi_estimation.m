@@ -10,16 +10,18 @@ time_bins = [-0.8 0];
 nperms = 200;
 nfreqs = 103;
 
+% select time
+[atlas,sourcemodel] = get_sourcemodel();
+chans = cat(1,source.label(atlas.inside(sourcemodel.inside)),'MD');
+source = ft_selectdata(struct('latency',time_bins,'channel',{chans}),source);  
+
+% calculate freq-domain psi for hits and misses
+[psi_hits,psi_misses,psi_all,freq_hits,freq_misses,freq_all] = internal_getpsi(source,false);
+
 % predefine permutation output
 perm_hits   = zeros(size(source.label,1)-1,nfreqs,nperms);
 perm_misses = zeros(size(source.label,1)-1,nfreqs,nperms);
 perm_all    = zeros(size(source.label,1)-1,nfreqs,nperms);
-
-% select time
-source = ft_selectdata(struct('latency',time_bins),source);  
-
-% calculate freq-domain psi for hits and misses
-[psi_hits,psi_misses,psi_all,freq_hits,freq_misses,freq_all] = internal_getpsi(source,false);
 
 % cycle through permutations
 for perm = 1 : nperms
@@ -47,22 +49,22 @@ data_all = internal_createDataStruct(psi_all,labels,freqs);
 data_hits.psi_z = psi_z_hits;
 data_misses.psi_z = psi_z_misses;
 data_all.psi_z = psi_z_all;
-% 
-% % plot histogram
-% [~,peak_idx] = max(mean(psi_z_hits(:,freqs<=14,1)));
-% bins = -0.05:0.0025:0.0475;
-% perm_avg = squeeze(mean(mean(perm_hits(:,peak_idx,1,:),1),2));
-% obs_avg = squeeze(mean(mean(psi_hits(:,peak_idx,1,:),1),2));
-% sorted_avg = sort(perm_avg);
-% figure; hold on
-% histogram(perm_avg,'BinEdges',bins,'normalization','probability');
-% xlim([-0.05 0.05]); ylim([0 0.2])
-% %xline(sorted_avg(round(numel(sorted_avg)*0.95)),'k--')
-% xline(obs_avg,'k-'); set(gca,'tickdir','out');
-% title(sprintf('sub-%02.0f - peak freq: %2.1fHz',pp,freqs(peak_idx)))
+
+% plot histogram
+[~,peak_idx] = max(nanmean(psi_z_hits(:,freqs>=6&freqs<=20,1)));
+bins = -0.05:0.0025:0.0475;
+perm_avg = squeeze(nanmean(nanmean(perm_hits(:,peak_idx,:),1),2));
+obs_avg = squeeze(nanmean(nanmean(psi_hits(:,peak_idx,:),1),2));
+%sorted_avg = sort(perm_avg);
+figure; hold on
+histogram(perm_avg,'BinEdges',bins,'normalization','probability');
+xlim([-0.05 0.05]); ylim([0 0.2])
+%xline(sorted_avg(round(numel(sorted_avg)*0.95)),'k--')
+xline(obs_avg,'k-'); set(gca,'tickdir','out');
+title(sprintf('sub-%02.0f - peak freq: %2.1fHz',pp,freqs(peak_idx+6)))
 
 % save data
-save(sprintf('%s/derivatives/sub-%02.0f/ephys/sub-%02.0f_ephys-psiMD_contrast-timeResolved.mat',directory,pp,pp),'data_hits','data_misses','data_all');
+save(sprintf('%s/derivatives/sub-%02.0f/ephys/sub-%02.0f_ephys-psiMD_contrast.mat',directory,pp,pp),'data_hits','data_misses','data_all','perm_hits','perm_misses','perm_all');
 
 end
 
@@ -113,7 +115,7 @@ end
 cfg                     = [];
 cfg.method              = 'psi';
 cfg.channelcmb          = channelcmb;
-cfg.bandwidth           = 5;
+cfg.bandwidth           = 3;
 data_hits               = ft_connectivityanalysis(cfg,freq_hits);
 psi_hits                = data_hits.psispctrm;
 

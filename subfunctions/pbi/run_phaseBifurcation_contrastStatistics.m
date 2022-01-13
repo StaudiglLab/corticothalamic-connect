@@ -50,9 +50,6 @@ design      = zeros(2,size(freq.pbi,1)*2);
 design(1,:) = repmat(1:size(freq.pbi,1),[1 2]);
 design(2,:) = [ones(1,size(freq.pbi,1)),ones(1,size(freq.pbi,1))+1];
 
-% load MD cluster
-load(sprintf('%s/derivatives/group/stat_pbi-MD.mat',directory),'stat');
-
 % define general stat config structure
 cfg                     = [];
 cfg.method              = 'montecarlo';

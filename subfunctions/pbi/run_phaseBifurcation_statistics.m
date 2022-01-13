@@ -66,8 +66,8 @@ if strcmpi(roi_str,'source')
     end
     
     % load in partial mask
-    source.inside = partial.inside;
-    source.pbi(:,source.inside~=1) = NaN;
+    %source.inside = partial.inside;
+    %source.pbi(:,source.inside~=1) = NaN;
     
     % rename source to fit code
     freq = source;
@@ -94,6 +94,7 @@ cfg.ivar                = 2;
 cfg.uvar                = 1;
 cfg.parameter           = 'pbi';
 cfg.design              = design;
+cfg.tail                = 1;
 cfg.statistic           = 'ft_statfun_depsamplesT';  
 
 % if is source
@@ -131,6 +132,65 @@ if strcmpi(participantType,'control')
     save(sprintf('%s/derivatives/group/stat_pbi-%s_controls.mat',directory,roi_str),'stat','freq','-v7.3');
 else
     save(sprintf('%s/derivatives/group/stat_pbi-%s.mat',directory,roi_str),'stat','freq','-v7.3');
+end
+
+% save source plot
+if strcmpi(roi_str,'source')
+    
+    % get sourcemodel information
+    [atlas,sourcemodel] = get_sourcemodel;
+
+    % get group average
+    cfg                 = [];
+    cfg.keepindividual  = 'yes';
+    cfg.parameter       = {'pbi','pbi_raw','pbi_dist'};
+    freq                = ft_freqgrandaverage(cfg,group_data{:});
+    
+    % create source structure
+    source = struct('dim',sourcemodel.dim,'inside',atlas.inside(:),'pos',sourcemodel.pos.*10,...
+                    'label',{freq.label},'pbi',zeros(numel(atlas.inside),1),...
+                    'unit','mm','dimord','rpt_pos','transform',atlas.transform);
+                
+    % add in measure
+    if strcmpi(participantType,'patient')
+        source.pbi(source.inside) = mean(mean(mean(freq.pbi(:,:,freq.freq>=10&freq.freq<=12,freq.time>=-0.5&freq.time<=-0.3),4),3));
+    elseif strcmpi(participantType,'control') % restrict to patient cluster
+        source.pbi(source.inside) = mean(mean(mean(freq.pbi(:,:,freq.freq>=10&freq.freq<=12,freq.time>=-0.4&freq.time<=-0.2),4),3));
+    end
+    
+%     % get measure of interest
+%     pow = mean(source.pbi,1);
+% 
+%     % create source data structure
+%     source              = [];
+%     source.dim          = sourcemodel.dim;
+%     source.pos          = sourcemodel.pos;
+%     source.inside       = atlas.inside;
+%     source.pow          = zeros(numel(atlas.inside),1);
+%     source.pow(source.inside) = pow(source.inside);
+%     source.dimord       = 'rpt_pos';
+%     source.pos          = source.pos.*10;
+%     source.unit         = 'mm';
+
+    % reshape source
+%     source.pow = reshape(source.pow,source.dim);
+
+    % add transformation matrix
+    source.transform        = [1,0,0,-91;
+                               0,1,0,-127;
+                               0,0,1,-73;
+                               0,0,0,1];
+                       
+    % export stat
+    cfg                 = [];
+    cfg.parameter       = 'pbi';               % specify the functional parameter to write to the .nii file
+    cfg.filename        = ['C:/Users/ra34fod/github/corticothalamic-connect/source_data/pbi_',participantType,'.nii'];  % enter the desired file name
+    cfg.filetype        = 'nifti';
+    cfg.vmpversion      = 2;
+    cfg.datatype        = 'float';
+    ft_volumewrite(cfg,source);      % be sure to use your interpolated source data   
+    reslice_nii(cfg.filename,cfg.filename,[1 1 1])
+
 end
 
 end

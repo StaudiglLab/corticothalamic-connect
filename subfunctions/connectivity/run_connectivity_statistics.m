@@ -37,11 +37,6 @@ source = struct('dim',sourcemodel.dim,'inside',atlas.inside(:),'pos',sourcemodel
 source.all(:,source.inside) = mean(mean(grand_freq.all(:,:,grand_freq.freq<=14,grand_freq.time<0),4),3);
 source.beh(:,source.inside) = mean(mean(grand_freq.beh(:,:,grand_freq.freq<=14,grand_freq.time<0),4),3);
 
-% load in partial mask
-source.inside = partial.inside(:);
-source.all(:,source.inside~=1) = NaN;
-source.beh(:,source.inside~=1) = NaN;
-
 % rename source to fit code
 freq = source;
 
@@ -122,17 +117,16 @@ fprintf('\n--- Statistics: "%s" for "hits > misses" ---\nt(%d): %3.3f\np: %3.3f\
 
 %% Get 8Hz Mask
 % get sourcemodel
-[atlas,sourcemodel] = get_sourcemodel();
+[atlas,sourcemodel,partial] = get_sourcemodel();
 
 % create source structure
 source = struct('dim',sourcemodel.dim,'inside',atlas.inside(:),'pos',sourcemodel.pos.*10,...
                 'label',{grand_freq.label},'all',zeros(size(grand_freq.all,1),numel(atlas.inside)),...
-                'beh',zeros(size(grand_freq.all,1),numel(atlas.inside)),...
                 'unit','mm','dimord','rpt_pos','transform',atlas.transform);
 
 % add in measure
 source.all(:,source.inside) = mean(mean(grand_freq.all(:,:,knnsearch(grand_freq.freq',7):knnsearch(grand_freq.freq',9),grand_freq.time<0),4),3);
-source.beh(:,source.inside) = mean(mean(grand_freq.beh(:,:,knnsearch(grand_freq.freq',7):knnsearch(grand_freq.freq',9),grand_freq.time<0),4),3);
+%source.all(:,partial.inside~=1) = 0;
 
 % rename source to fit code
 freq = source;
@@ -170,7 +164,7 @@ save(sprintf('%s/derivatives/group/stat_pli-all_%s.mat',directory,roi_str),'gran
 source              = [];
 source.dim          = stat.dim;
 source.pos          = stat.pos;
-source.inside       = partial.inside;
+source.inside       = stat.inside;
 source.pow_all      = stat.stat;
 source.pow_beh   	= stat_beh.stat;
 source.pow_mask     = stat_mask.stat;
@@ -179,28 +173,23 @@ source.dimord       = 'rpt_pos';
 source.unit         = 'mm';
 %source.transform    = [1,0,0,-91;0,1,0,-127;0,0,1,-73;0,0,0,1];
 
-% mask posterior
-source.pow_all(partial.inside~=1) = 0;
-source.pow_beh(partial.inside~=1) = 0;
-source.pow_mask(partial.inside~=1) = 0;
-
 % prepare export config
 cfg                 = [];
 cfg.filetype        = 'nifti';
 cfg.vmpversion      = 2;
 cfg.datatype        = 'float';
 cfg.parameter       = 'pow_all'; 
-cfg.filename        = ['figures/group-connect_',roi_str,'-all.nii'];  % enter the desired file name
+cfg.filename        = ['source_data/group-connect_',roi_str,'-all.nii'];  % enter the desired file name
 ft_volumewrite(cfg,source);      % be sure to use your interpolated source data   
 reslice_nii(cfg.filename,cfg.filename,[1 1 1])
 
 cfg.parameter       = 'pow_beh'; 
-cfg.filename        = ['figures/group-connect_',roi_str,'-beh.nii'];  % enter the desired file name
+cfg.filename        = ['source_data/group-connect_',roi_str,'-beh.nii'];  % enter the desired file name
 ft_volumewrite(cfg,source);      % be sure to use your interpolated source data   
 reslice_nii(cfg.filename,cfg.filename,[1 1 1])
 
 cfg.parameter       = 'pow_mask'; 
-cfg.filename        = ['figures/group-connect_',roi_str,'-mask.nii'];  % enter the desired file name
+cfg.filename        = ['source_data/group-connect_',roi_str,'-mask.nii'];  % enter the desired file name
 ft_volumewrite(cfg,source);      % be sure to use your interpolated source data   
 reslice_nii(cfg.filename,cfg.filename,[1 1 1])
 

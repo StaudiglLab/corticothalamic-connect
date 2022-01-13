@@ -3,6 +3,8 @@
 **.png
 **.nii
 **/figures
+**/private
+**/source_data
 *.png
 *.mp4
 *.mat

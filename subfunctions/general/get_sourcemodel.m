@@ -41,6 +41,10 @@ if nargin == 1
             aal.anatomy(aal.anatomy~=5001) = 0;
         case 'mpfc'
             aal.anatomy(aal.anatomy~=2111 & aal.anatomy~=2112 & aal.anatomy~=2702 & aal.anatomy~=2701) = 0;
+        case 'frontal'
+            aal.anatomy(isnan(aal.anatomy)) = 0;
+            aal.anatomy(aal.anatomy<2102 | aal.anatomy>2612) = 0;
+            aal.anatomy(aal.anatomy>=2331 & aal.anatomy<=2502) = 0;
         otherwise
             warning('mask "%s" does not exist...',roi)
     end

@@ -5,7 +5,7 @@ close all
 clc
 
 % define data directory
-dir_data = 'C:/Users/ra34fod/Documents/meg-ieeg_data_v2/';
+dir_data = 'F:/meg-ieeg_data_v2/';
 dir_repo = 'C:/Users/ra34fod/github/corticothalamic-connect/';
 
 % add toolboxes
@@ -59,3 +59,6 @@ run_phaseBifurcation_statistics(dir_data,'source','control')
 
 % run MD > ANT contrast
 run_phaseBifurcation_contrastStatistics(dir_data)
+
+% run MD > ANT contrast
+run_phaseBifurcation_patientControlContrast(dir_data)
