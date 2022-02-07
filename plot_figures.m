@@ -377,30 +377,39 @@ tbl = readtable([dir_repo,'/source_data/supp_fig_6.csv']);
 
 % plot parameters
 count = 1;
-xabslim = [0.001 0.004 0.001 0.004];
-plot_title = {'Controls: Without ERP', 'Patients: Without ERP', 'Controls: With ERP', 'Patients: With ERP'};
+xabslim = [0.001 0.004 0.001 0.004 0.004 0.004];
+plot_title = {'Control MEG: Without ERP', 'Patient MEG: Without ERP', 'Control MEG: With ERP',...
+              'Patient MEG: With ERP', 'iEEG: Without ERP', 'iEEG: With ERP'};
 
 % cycle through conditions
-for erp = 0 : 1
-    for samp = 0 : 1
+for measure = 0 : 1
+    for erp = 0 : 1
+        for samp = 0 : 1
+            
+            % skip if iEEG + control 
+            if (measure==1) && (samp == 0); continue; end
 
-        % shorten table
-        tbl_red = tbl(tbl.hasERP==erp&tbl.isPatient==samp,:);
-        
-        % convert longform to tfr
-        [vals,freqs,times] = longform_to_tfr(tbl_red.vals,tbl_red.freq,tbl_red.time);
+            % shorten table
+            tbl_red = tbl(tbl.hasERP==erp&tbl.isPatient==samp&tbl.isiEEG==measure,:);
 
-        % plot
-        cmap = flipud(brewermap(11,'RdGy'));
-        figure;
-        imagesc(times,freqs,vals); hold on; axis xy
-        caxis([-xabslim(count) xabslim(count)]); 
-        xline(0,'k--'); colorbar(); colormap(cmap);
-        title(plot_title{count});
-        set(gca,'ytick',5:5:20);
-        xlabel('Time (s)');
-        ylabel('Freq. (Hz)')
-        count = count + 1;
+            % convert longform to tfr
+            [vals,freqs,times] = longform_to_tfr(tbl_red.vals,tbl_red.freq,tbl_red.time);
+
+            % plot
+            cmap = flipud(brewermap(11,'RdGy'));
+            figure;
+            imagesc(times,freqs,vals); hold on; axis xy
+            caxis([-xabslim(count) xabslim(count)]); 
+            xline(0,'k--'); colorbar(); colormap(cmap);
+            title(plot_title{count});
+            set(gca,'ytick',5:5:20);
+            xlabel('Time (s)');
+            ylabel('Freq. (Hz)')
+            count = count + 1;
+            
+            % print cond
+            fprintf('m=%d; e=%d; s=%d\n',measure,erp,samp)
+        end
     end
 end
 
