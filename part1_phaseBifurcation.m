@@ -5,7 +5,7 @@ close all
 clc
 
 % define data directory
-dir_data = 'F:/meg-ieeg_data_v2/';
+dir_data = 'F:/meg-ieeg_data_v2/'; % NOW H:/meg-ieeg_magdeburg_v4
 dir_repo = 'C:/Users/ra34fod/github/corticothalamic-connect/';
 
 % add toolboxes
