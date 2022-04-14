@@ -4,6 +4,7 @@
 % precede human visual perception". All necessary data can be found within
 % the subfolder "source_data".
 %
+%
 % Data exceptions: 
 %
 %   Fig. 1a: This figure is a schematic drawing that contains no data
@@ -19,18 +20,30 @@
 % Following plotting, figures were exported to Microsoft Powerpoint for
 % resizing/positioning, and then to GIMP to tidy the complete figures.
 % Consequently, some dimensions/colours/fonts/labels may vary.
-
+%
+%
+% Dependencies:
+%
+%   Fieldtrip - https://github.com/fieldtrip/fieldtrip
+%   Brewermap - https://github.com/DrosteEffect/BrewerMap
+%   shadedErrorBar - https://github.com/raacampbell/shadedErrorBar
+%
+%
 %% Prepare Workspace
 % clear workspace
 clearvars
 close all
 clc
 
-% define data directory
-dir_repo = 'C:/Users/ra34fod/github/corticothalamic-connect/';
+% define data directory (always run script from main repository)
+dir_repo = pwd;
 
 % add toolboxes
-addpath(genpath(sprintf('%ssubfunctions',dir_repo)))
+addpath(genpath(sprintf('%s/subfunctions',dir_repo)))
+addpath('C:/Users/griffibz/Documents/GitHub/BrewerMap/')
+addpath('C:/Users/griffibz/Documents/GitHub/shadedErrorBar/')
+addpath('C:/Users/griffibz/Documents/GitHub/fieldtrip/')
+ft_defaults
 
 %% Figure 1.
 % --- Figure 1a --- %
@@ -224,17 +237,6 @@ for pp = 1:6
     if pp==6; xlabel('Phase Slope Index (arb. units)'); end
 end
 
-
-    % plot histogram
-%     bins = -0.04:0.004:0.036;
-%     %sorted_avg = sort(perm_avg);
-%     figure; hold on
-%     histogram(perm_avg,'BinEdges',bins,'normalization','probability');
-%     xlim([-0.04 0.04]); ylim([0 0.4])
-%     %xline(sorted_avg(round(numel(sorted_avg)*0.95)),'k--')
-%     xline(obs_avg,'k-'); set(gca,'tickdir','out');
-%     title(sprintf('sub-%02.0f - peak freq: %2.1fHz',pp,freqs(peak_idx+6)))
-
 %% Figure 3.
 % --- Figure 3a --- %
 % This is a schematic drawing that contains no data for plotting
@@ -372,44 +374,64 @@ legend(h,{'Single Trial Power','Trial-Average Power'})
 
 
 %% Supp. Fig. 6
-% load data
-tbl = readtable([dir_repo,'/source_data/supp_fig_6.csv']);
+% load erp data
+tbl = readtable([dir_repo,'/source_data/supp_fig_6_erp.xlsx']);
+
+% plot side-by-side
+cmap = flipud(brewermap(11,'RdGy'));
+figure('position',[100 100 900 250]); 
+for samp = 1 : 2
+    
+    % get datqa
+    hits = tbl.vals((tbl.sample==samp) & (tbl.condition==1));
+    misses = tbl.vals((tbl.sample==samp) & (tbl.condition==2));
+    time = tbl.time((tbl.sample==samp) & (tbl.condition==2));
+    
+    subplot(1,2,samp); hold on
+    plot(time,smooth(misses),'color',cmap(4,:),'linewidth',2); hold on
+    plot(time,smooth(hits),'color',cmap(9,:),'linewidth',2); hold on
+    xlim([-0.8 0.8])
+    xlabel('time (s)')
+    ylabel('amp. (uV)')
+    xline(0,'k--')
+    yline(0,'k-')
+    set(gca,'box','off','tickdir','out')
+end
+
+
+% load tfr data
+tbl = readtable([dir_repo,'/source_data/supp_fig_6_tfr.csv']);
 
 % plot parameters
 count = 1;
-xabslim = [0.001 0.004 0.001 0.004 0.004 0.004];
+xabslim = [0.001 0.004 0.001 0.004];
 plot_title = {'Control MEG: Without ERP', 'Patient MEG: Without ERP', 'Control MEG: With ERP',...
-              'Patient MEG: With ERP', 'iEEG: Without ERP', 'iEEG: With ERP'};
+              'Patient MEG: With ERP'};
 
 % cycle through conditions
-for measure = 0 : 1
-    for erp = 0 : 1
-        for samp = 0 : 1
-            
-            % skip if iEEG + control 
-            if (measure==1) && (samp == 0); continue; end
+for erp = 0 : 1
+    for samp = 0 : 1
 
-            % shorten table
-            tbl_red = tbl(tbl.hasERP==erp&tbl.isPatient==samp&tbl.isiEEG==measure,:);
+        % shorten table
+        tbl_red = tbl(tbl.hasERP==erp&tbl.isPatient==samp,:);
 
-            % convert longform to tfr
-            [vals,freqs,times] = longform_to_tfr(tbl_red.vals,tbl_red.freq,tbl_red.time);
+        % convert longform to tfr
+        [vals,freqs,times] = longform_to_tfr(tbl_red.vals,tbl_red.freq,tbl_red.time);
 
-            % plot
-            cmap = flipud(brewermap(11,'RdGy'));
-            figure;
-            imagesc(times,freqs,vals); hold on; axis xy
-            caxis([-xabslim(count) xabslim(count)]); 
-            xline(0,'k--'); colorbar(); colormap(cmap);
-            title(plot_title{count});
-            set(gca,'ytick',5:5:20);
-            xlabel('Time (s)');
-            ylabel('Freq. (Hz)')
-            count = count + 1;
-            
-            % print cond
-            fprintf('m=%d; e=%d; s=%d\n',measure,erp,samp)
-        end
+        % plot
+        cmap = flipud(brewermap(11,'RdGy'));
+        figure;
+        imagesc(times,freqs,vals); hold on; axis xy
+        caxis([-xabslim(count) xabslim(count)]); 
+        xline(0,'k--'); colorbar(); colormap(cmap);
+        title(plot_title{count});
+        set(gca,'ytick',5:5:20);
+        xlabel('Time (s)');
+        ylabel('Freq. (Hz)')
+        count = count + 1;
+
+        % print cond
+        fprintf('e=%d; s=%d\n',erp,samp)
     end
 end
 
@@ -417,7 +439,7 @@ end
 % missing sensor plot
 
 % load data
-tbl = readtable([dir_repo,'/source_data/supp_fig_6.xlsx']);
+tbl = readtable([dir_repo,'/source_data/supp_fig_7.xlsx']);
 load([dir_repo,'/source_data/layout.mat']);
 
 % create fake struct
@@ -449,7 +471,7 @@ ft_topoplotER(cfg,tml);
 
 % --- supp. fig 8a --- %
 % load data
-tbl = readtable([dir_repo,'/source_data/supp_fig_8.xlsx'],'sheet','supp_fig_8a');
+tbl = readtable([dir_repo,'/source_data/supp_fig_9.xlsx'],'sheet','supp_fig_9a');
 
 % convert longform to tfr
 [vals,freqs,times] = longform_to_tfr(tbl.all_plv,tbl.freq,tbl.time);
@@ -469,7 +491,7 @@ ylabel('Freq. (Hz)')
 
 % --- supp. fig 8b --- %
 % load data
-tbl = readtable([dir_repo,'/source_data/supp_fig_8.xlsx'],'sheet','supp_fig_8b');
+tbl = readtable([dir_repo,'/source_data/supp_fig_9.xlsx'],'sheet','supp_fig_9b');
 
 % convert longform to tfr
 [vals,freqs,times] = longform_to_tfr(tbl.beh_plv,tbl.freq,tbl.time);
@@ -493,7 +515,7 @@ ylabel('Freq. (Hz)')
 % partial correlation histograms
 
 % load data
-tbl = readtable([dir_repo,'/source_data/supp_fig_10.xlsx']);
+tbl = readtable([dir_repo,'/source_data/supp_fig_11.xlsx']);
 
 % plot
 cmap = [3 187 131]./255;
@@ -515,7 +537,7 @@ end
 % thalamus ERPs
 
 % load data
-tbl = readtable([dir_repo,'/source_data/supp_fig_11.xlsx']);
+tbl = readtable([dir_repo,'/source_data/supp_fig_12.xlsx']);
 
 figure('position',[100 100 800 800]); 
 
